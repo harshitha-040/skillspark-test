@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 
-const ADMIN_PASSWORD = "root#123";
+const ADMIN_PASSWORD =
+  import.meta.env.VITE_ADMIN_PASSWORD;
 
 const SESSION_STORAGE_KEY =
   "admin_authenticated";
