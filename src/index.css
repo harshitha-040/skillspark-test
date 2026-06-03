@@ -1,9 +1,12 @@
+/* ✅ Fonts MUST be first */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ✅ Tailwind order */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
-
+/* ================= BASE ================= */
 @layer base {
   :root {
     --background: 220 20% 97%;
@@ -44,6 +47,7 @@
     --gradient-primary: linear-gradient(135deg, hsl(230, 75%, 15%), hsl(230, 60%, 25%));
     --gradient-accent: linear-gradient(135deg, hsl(192, 95%, 45%), hsl(210, 100%, 55%));
     --gradient-hero: linear-gradient(135deg, hsl(230, 75%, 10%), hsl(230, 60%, 18%), hsl(220, 50%, 22%));
+
     --shadow-card: 0 1px 3px hsl(220 20% 80% / 0.3), 0 4px 12px hsl(220 20% 80% / 0.15);
     --shadow-elevated: 0 4px 16px hsl(220 20% 80% / 0.3), 0 8px 32px hsl(220 20% 80% / 0.15);
 
@@ -85,18 +89,8 @@
     --border: 228 15% 22%;
     --input: 228 15% 22%;
     --ring: 192 95% 45%;
-
-    --success: 152 69% 40%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-
-    --shadow-card: 0 1px 3px hsl(228 25% 4% / 0.5), 0 4px 12px hsl(228 25% 4% / 0.3);
-    --shadow-elevated: 0 4px 16px hsl(228 25% 4% / 0.5), 0 8px 32px hsl(228 25% 4% / 0.3);
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
@@ -111,6 +105,7 @@
   }
 }
 
+/* ================= COMPONENTS ================= */
 @layer components {
   .glass-card {
     @apply bg-secondary/80 backdrop-blur-sm border border-border rounded-xl;
@@ -127,8 +122,8 @@
   }
 
   .tech-card:hover {
-    box-shadow: var(--shadow-elevated);
     @apply border-accent/50 scale-[1.02];
+    box-shadow: var(--shadow-elevated);
   }
 
   .tech-card.selected {

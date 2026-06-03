@@ -1,72 +1,194 @@
-import { useState, type ReactNode } from "react";
+import {
+  useState,
+  type ReactNode,
+} from "react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 
-const PASSWORD = "root#123";
-const SESSION_STORAGE_KEY = "admin_authenticated";
+const ADMIN_PASSWORD = "root#123";
+
+const SESSION_STORAGE_KEY =
+  "admin_authenticated";
 
 interface PasswordProtectProps {
   children: ReactNode;
 }
 
-const PasswordProtect = ({ children }: PasswordProtectProps) => {
+const PasswordProtect = ({
+  children,
+}: PasswordProtectProps) => {
+
   const { toast } = useToast();
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    sessionStorage.getItem(SESSION_STORAGE_KEY) === "true"
-  );
-  const [password, setPassword] = useState("");
+
+  const [password, setPassword] =
+    useState("");
+
+  const [isAuthenticated, setIsAuthenticated] =
+    useState(
+      sessionStorage.getItem(
+        SESSION_STORAGE_KEY
+      ) === "true"
+    );
+
+  /* =========================
+     LOGIN
+  ========================= */
 
   const handleLogin = () => {
-    if (password === PASSWORD) {
-      sessionStorage.setItem(SESSION_STORAGE_KEY, "true");
+
+    if (
+      password.trim() ===
+      ADMIN_PASSWORD
+    ) {
+
+      sessionStorage.setItem(
+        SESSION_STORAGE_KEY,
+        "true"
+      );
+
       setIsAuthenticated(true);
+
       toast({
         title: "Success",
-        description: "Authenticated successfully.",
+        description:
+          "Admin access granted",
       });
+
     } else {
+
       toast({
-        title: "Error",
-        description: "Incorrect password.",
+        title: "Access Denied",
+        description:
+          "Incorrect admin password",
         variant: "destructive",
       });
+
     }
+
   };
 
+  /* =========================
+     LOGOUT
+  ========================= */
+
+  const handleLogout = () => {
+
+    sessionStorage.removeItem(
+      SESSION_STORAGE_KEY
+    );
+
+    setIsAuthenticated(false);
+
+    toast({
+      title: "Logged Out",
+      description:
+        "Admin session ended",
+    });
+
+  };
+
+  /* =========================
+     AUTHORIZED
+  ========================= */
+
   if (isAuthenticated) {
-    return <>{children}</>;
+
+    return (
+
+      <div className="relative">
+
+        {/* LOGOUT BUTTON */}
+
+        <div className="fixed top-6 right-6 z-50">
+
+          <Button
+            onClick={handleLogout}
+            className="bg-red-500 hover:bg-red-600 text-white"
+          >
+            Logout
+          </Button>
+
+        </div>
+
+        {children}
+
+      </div>
+
+    );
+
   }
 
+  /* =========================
+     LOGIN SCREEN
+  ========================= */
+
   return (
-    <div className="min-h-screen flex items-center justify-center py-24"
+
+    <div
+      className="min-h-screen flex items-center justify-center px-6"
       style={{
-        backgroundImage: `url('https://images.unsplash.com/photo-1510519138101-570d1dca3d66?fit=crop&w=1920&q=80')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        color: 'white'
-      }}>
-      <div className="glass bg-gray-900 shadow-xl p-8 text-center rounded-xl max-w-sm mx-auto">
-        <h1 className="text-2xl font-display font-bold mb-4 text-white">Admin Access Required</h1>
-        <p className="text-gray-200 mb-6">
-          Please enter the password to access this page.
+        backgroundImage:
+          "url('https://images.unsplash.com/photo-1510519138101-570d1dca3d66?fit=crop&w=1920&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+
+      {/* DARK OVERLAY */}
+
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+      {/* CARD */}
+
+      <div className="relative z-10 w-full max-w-md bg-[#071028]/90 border border-cyan-500/20 rounded-3xl p-8 shadow-[0_0_40px_rgba(0,255,255,0.15)]">
+
+        <h1 className="text-3xl font-bold text-white mb-3 text-center">
+
+          Admin Access
+
+        </h1>
+
+        <p className="text-gray-300 text-center mb-8">
+
+          Enter admin password to continue
+
         </p>
-        <div className="space-y-4">
+
+        <div className="space-y-5">
+
           <Input
             type="password"
-            placeholder="Password"
+            placeholder="Enter password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-            className="bg-white text-gray-900" // Explicitly set background and text color
+            onChange={(e) =>
+              setPassword(e.target.value)
+            }
+            onKeyDown={(e) =>
+              e.key === "Enter" &&
+              handleLogin()
+            }
+            className="bg-white text-black h-12"
           />
-          <Button onClick={handleLogin} size="lg" className="w-full bg-[#06B6D4] text-white hover:bg-[#0891B2] rounded-xl shadow-[0_10px_30px_rgba(59,130,246,0.4)]">
-            Enter
+
+          <Button
+            onClick={handleLogin}
+            className="w-full h-12 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl"
+          >
+
+            Enter Admin Panel
+
           </Button>
+
         </div>
+
       </div>
+
     </div>
+
   );
+
 };
 
 export default PasswordProtect;

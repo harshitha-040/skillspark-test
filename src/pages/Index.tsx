@@ -40,11 +40,24 @@ const Index = () => {
               Evaluate your technical skills with AI-generated assessments. Choose your technology, select your level, and prove your expertise.
             </p>
             <div className="flex flex-wrap gap-4">
-              <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 text-base px-8 h-12 rounded-xl font-semibold shadow-lg">
-                <Link to="/select">
-                  Start Test <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
+              <Button
+  size="lg"
+  className="bg-accent text-accent-foreground hover:bg-accent/90 text-base px-8 h-12 rounded-xl font-semibold shadow-lg"
+  onClick={() => {
+    console.log("clicked"); // 🔥 debug
+
+    const user = localStorage.getItem("user");
+
+    if (!user) {
+      window.dispatchEvent(new Event("open-login"));
+    } else {
+      window.location.href = "#/select";
+    }
+  }}
+>
+  Start Test <ArrowRight className="ml-2 h-5 w-5" />
+</Button>
+
             </div>
           </motion.div>
         </div>

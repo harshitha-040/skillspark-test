@@ -26,8 +26,11 @@ const TOTAL_TIME = 20 * 60;
 const TestPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const technology = searchParams.get("tech") as Technology;
-  const difficulty = searchParams.get("difficulty") as Difficulty;
+  const technology =
+  (searchParams.get("tech") as Technology) || "Core Java";
+
+const difficulty =
+  (searchParams.get("difficulty") as Difficulty) || "Beginner";
 
   const [questions] = useState(() =>
     generateMockQuestions(technology, difficulty)
@@ -69,8 +72,8 @@ const TestPage = () => {
     });
 
     const result: TestResult = {
-      technology,
-      difficulty,
+  technology,
+  difficulty,
       totalQuestions: questions.length,
       correctAnswers: correct,
       wrongAnswers: questions.length - correct,
@@ -97,10 +100,10 @@ const TestPage = () => {
   const progress = (answeredCount / questions.length) * 100;
   const isLowTime = timeLeft < 300;
 
-  if (!technology || !difficulty) {
-    navigate("/select");
-    return null;
-  }
+  if (!searchParams.get("tech") || !searchParams.get("difficulty")) {
+  navigate("/select");
+  return null;
+}
 
   return (
     <div className="min-h-screen pt-20 pb-8 bg-[#0F172A] text-[#E2E8F0]">
