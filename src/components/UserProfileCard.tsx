@@ -1,301 +1,85 @@
-import { useEffect, useState } from "react";
+import { Trophy, Target, Award, Shield, Mail, Calendar } from "lucide-react";
+import { motion } from "framer-motion";
 
-interface Props {
-  stats: any;
-}
-
-function UserProfileCard({ stats }: Props) {
-
-  const [user, setUser] =
-    useState<any>(null);
-
-  const [badges, setBadges] =
-    useState<any>({
-      earned: [],
-      locked: [],
-    });
-
-  useEffect(() => {
-
-    const storedUser = JSON.parse(
-      localStorage.getItem("user") || "null"
-    );
-
-    setUser(storedUser);
-
-    if (!storedUser) return;
-
-    /* =========================
-       FETCH BADGES
-    ========================= */
-
-    fetch(
-      `http://localhost:5000/api/badges/${storedUser.id}`
-    )
-
-      .then((res) => res.json())
-
-      .then((data) => {
-
-        console.log(
-          "BADGES:",
-          data
-        );
-
-        setBadges(data);
-
-      })
-
-      .catch((err) => {
-
-        console.log(
-          "Badge Error:",
-          err
-        );
-
-      });
-
-  }, []);
-
-  /* =========================
-     DYNAMIC STREAK
-  ========================= */
-
-  const streak =
-    stats?.totalTests || 0;
+function UserProfileCard({ stats }: any) {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  
+  const performanceItems = [
+    { label: "Avg Score", value: `${stats?.averageScore || 0}%`, icon: Target, color: "text-cyan-500", bg: "bg-cyan-500/10" },
+    { label: "Highest", value: `${stats?.highestScore || 0}%`, icon: Trophy, color: "text-yellow-500", bg: "bg-yellow-500/10" },
+    { label: "Skills", value: stats?.technologies || 0, icon: Award, color: "text-purple-500", bg: "bg-purple-500/10" },
+  ];
 
   return (
-
-    <div className="bg-white/5 border border-cyan-500/10 rounded-3xl p-6 backdrop-blur-lg">
-
-      {/* =========================
-          PROFILE
-      ========================= */}
-
-      <div className="flex items-center gap-4">
-
-        <div className="w-20 h-20 rounded-full bg-cyan-500 flex items-center justify-center text-3xl font-bold text-black">
-
-          {user?.username
-            ?.charAt(0)
-            ?.toUpperCase() || "U"}
-
-        </div>
-
-        <div>
-
-          <h2 className="text-2xl font-bold">
-
-            {user?.username || "User"}
-
-          </h2>
-
-          <p className="text-gray-400">
-
-            {user?.email || "No Email"}
-
-          </p>
-
-          <p className="text-cyan-400 text-sm mt-1">
-
-            Plan:
-            {" "}
-            {user?.plan || "Free"}
-
-          </p>
-
-        </div>
-
-      </div>
-
-      {/* =========================
-          STATS
-      ========================= */}
-
-      <div className="grid grid-cols-2 gap-4 mt-6">
-
-        <div className="bg-white/5 rounded-2xl p-4">
-
-          <p className="text-gray-400 text-sm">
-
-            Current Streak
-
-          </p>
-
-          <h3 className="text-cyan-400 text-2xl font-bold">
-
-            {streak} Tests
-
-          </h3>
-
-        </div>
-
-        <div className="bg-white/5 rounded-2xl p-4">
-
-          <p className="text-gray-400 text-sm">
-
-            Skills Mastered
-
-          </p>
-
-          <h3 className="text-cyan-400 text-2xl font-bold">
-
-            {stats?.technologies || 0}
-
-          </h3>
-
-        </div>
-
-      </div>
-
-      {/* =========================
-          EARNED BADGES
-      ========================= */}
-
-      <div className="mt-8">
-
-        <p className="text-cyan-400 uppercase tracking-[4px] text-sm mb-4">
-
-          Earned Badges
-
-        </p>
-
-        <div className="flex flex-wrap gap-3">
-
-          {badges?.earned?.length > 0 ? (
-
-            badges.earned.map(
-              (
-                badge: any,
-                index: number
-              ) => {
-
-                let badgeStyle =
-                  "bg-cyan-500/10 border-cyan-400/20 text-cyan-300";
-
-                /* =========================
-                   STANDARD
-                ========================= */
-
-                if (
-                  badge.tier ===
-                  "standard"
-                ) {
-
-                  badgeStyle =
-                    "bg-purple-500/10 border-purple-400/20 text-purple-300";
-
-                }
-
-                /* =========================
-                   PRO
-                ========================= */
-
-                if (
-                  badge.tier ===
-                  "pro"
-                ) {
-
-                  badgeStyle =
-                    "bg-yellow-500/10 border-yellow-400/20 text-yellow-300";
-
-                }
-
-                return (
-
-                  <div
-                    key={index}
-                    className={`px-4 py-3 rounded-2xl border ${badgeStyle}`}
-                  >
-
-                    <p className="font-semibold text-sm">
-
-                      {badge.icon}
-                      {" "}
-                      {badge.title}
-
-                    </p>
-
-                  </div>
-
-                );
-
-              }
-            )
-
-          ) : (
-
-            <div className="text-gray-500">
-
-              No badges earned yet
-
+    <div className="space-y-6">
+      {/* PROFILE CARD */}
+      <div className="bg-card border border-border rounded-[2rem] p-8 shadow-sm transition-all duration-300">
+        <div className="text-center mb-8">
+          <div className="relative inline-block mb-6">
+            <div className="w-24 h-24 rounded-3xl bg-primary flex items-center justify-center text-white text-4xl font-black shadow-2xl shadow-primary/30 rotate-3">
+              {user.username?.charAt(0).toUpperCase()}
             </div>
-
-          )}
-
-        </div>
-
-      </div>
-
-      {/* =========================
-          LOCKED BADGES
-      ========================= */}
-
-      <div className="mt-8">
-
-        <p className="text-gray-400 uppercase tracking-[4px] text-sm mb-4">
-
-          Locked Badges
-
-        </p>
-
-        <div className="flex flex-wrap gap-3">
-
-          {badges?.locked?.length > 0 ? (
-
-            badges.locked.map(
-              (
-                badge: any,
-                index: number
-              ) => (
-
-                <div
-                  key={index}
-                  className="px-4 py-3 rounded-2xl border border-gray-700 bg-white/5 text-gray-400"
-                >
-
-                  <p className="font-semibold text-sm">
-
-                    {badge.icon}
-                    {" "}
-                    {badge.title}
-
-                  </p>
-
-                </div>
-
-              )
-            )
-
-          ) : (
-
-            <div className="text-gray-500">
-
-              No locked badges
-
+            <div className="absolute -bottom-2 -right-2 bg-background border border-border p-2 rounded-xl shadow-lg">
+              <Shield className="w-5 h-5 text-primary" />
             </div>
-
-          )}
-
+          </div>
+          <h2 className="text-2xl font-display font-bold">{user.username}</h2>
+          <p className="text-muted-foreground text-sm font-medium mt-1 uppercase tracking-widest">{user.plan || "Free"} Member</p>
         </div>
 
+        <div className="space-y-4">
+          <div className="flex items-center gap-4 p-4 rounded-2xl bg-secondary/50 border border-border/50">
+            <div className="w-10 h-10 rounded-xl bg-background flex items-center justify-center border border-border">
+              <Mail className="w-5 h-5 text-muted-foreground" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Email Address</span>
+              <span className="text-sm font-bold truncate">{user.email}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 p-4 rounded-2xl bg-secondary/50 border border-border/50">
+            <div className="w-10 h-10 rounded-xl bg-background flex items-center justify-center border border-border">
+              <Calendar className="w-5 h-5 text-muted-foreground" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Joined Date</span>
+              <span className="text-sm font-bold">June 2026</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3 mt-8">
+          {performanceItems.map((item, i) => (
+            <div key={i} className="flex flex-col items-center p-4 rounded-2xl bg-background border border-border">
+              <item.icon className={`w-5 h-5 ${item.color} mb-2`} />
+              <span className="text-lg font-black">{item.value}</span>
+              <span className="text-[9px] uppercase font-bold text-muted-foreground tracking-tighter">{item.label}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
+      {/* PLAN CARD (IF FREE) */}
+      {user.plan?.toLowerCase() === 'free' && (
+        <div className="bg-primary p-8 rounded-[2rem] text-white shadow-2xl shadow-primary/20 relative overflow-hidden group">
+          <div className="relative z-10">
+            <h3 className="text-xl font-bold mb-2">Go Premium</h3>
+            <p className="text-primary-foreground/80 text-sm mb-6 leading-relaxed">
+              Get unlimited tests, professional certificates, and priority support.
+            </p>
+            <button 
+              onClick={() => window.location.hash = "/pricing"}
+              className="w-full bg-white text-primary py-4 rounded-xl font-black text-sm uppercase tracking-widest hover:scale-[1.02] transition-transform"
+            >
+              Upgrade Now
+            </button>
+          </div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-700" />
+        </div>
+      )}
     </div>
-
   );
-
 }
 
 export default UserProfileCard;
-

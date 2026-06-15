@@ -255,6 +255,7 @@ app.post(
       total_questions,
       correct_answers,
       difficulty,
+      time_taken,
 
     } = req.body;
 
@@ -348,9 +349,10 @@ app.post(
                 score,
                 total_questions,
                 correct_answers,
-                difficulty
+                difficulty,
+                time_taken
               )
-              VALUES (?, ?, ?, ?, ?, ?)
+              VALUES (?, ?, ?, ?, ?, ?, ?)
             `;
 
             db.query(
@@ -364,6 +366,7 @@ app.post(
                 total_questions,
                 correct_answers,
                 difficulty,
+                time_taken || 0,
               ],
 
               (err) => {
@@ -395,6 +398,101 @@ app.post(
 
           }
         );
+
+      }
+    );
+
+  }
+);
+
+/* =========================
+   USER RESULTS API
+========================= */
+
+app.get(
+  "/api/results/:userId",
+  (req, res) => {
+
+    const userId =
+      req.params.userId;
+
+    const sql = `
+      SELECT
+        tr.*,
+        t.name AS technology_name,
+        t.icon AS technology_icon
+      FROM test_results tr
+      LEFT JOIN technologies t
+      ON tr.technology_id = t.id
+      WHERE tr.user_id = ?
+      ORDER BY tr.created_at DESC
+    `;
+
+    db.query(
+      sql,
+      [userId],
+      (err, results) => {
+
+        if (err) {
+
+          console.log(err);
+
+          return res.status(500).json({
+            success: false,
+          });
+
+        }
+
+        res.json(results);
+
+      }
+    );
+
+  }
+);
+
+/* =========================
+   SINGLE RESULT API
+========================= */
+
+app.get(
+  "/api/result/:resultId",
+  (req, res) => {
+
+    const resultId =
+      req.params.resultId;
+
+    const sql = `
+      SELECT
+        tr.*,
+        t.name AS technology_name,
+        t.icon AS technology_icon
+      FROM test_results tr
+      LEFT JOIN technologies t
+      ON tr.technology_id = t.id
+      WHERE tr.id = ?
+    `;
+
+    db.query(
+      sql,
+      [resultId],
+      (err, results) => {
+
+        if (err) {
+
+          console.log(err);
+
+          return res.status(500).json({
+            success: false,
+          });
+
+        }
+
+        if (results.length === 0) {
+          return res.status(404).json({ success: false, message: "Result not found" });
+        }
+
+        res.json(results[0]);
 
       }
     );
@@ -457,13 +555,14 @@ app.get(
           userResult[0];
 
         /* =========================
-           COUNT TESTS
+           COUNT TODAY'S TESTS
         ========================= */
 
         const countSql = `
-          SELECT COUNT(*) AS totalTests
+          SELECT COUNT(*) AS todayTests
           FROM test_results
           WHERE user_id = ?
+          AND DATE(created_at) = CURDATE()
         `;
 
         db.query(
@@ -480,18 +579,18 @@ app.get(
 
             }
 
-            const totalTests =
+            const todayTests =
               Number(
-                result[0].totalTests
+                result[0].todayTests
               );
 
             /* =========================
-               FREE PLAN LIMIT
+               FREE PLAN DAILY LIMIT
             ========================= */
 
             if (
               user.plan === "free" &&
-              totalTests >= 2
+              todayTests >= 2
             ) {
 
               return res.json({
@@ -499,7 +598,7 @@ app.get(
                 allowed: false,
 
                 message:
-                  "Free plan test limit reached",
+                  "Free plan daily limit reached (2 tests/day)",
 
               });
 
@@ -587,21 +686,24 @@ app.get(
       req.params.userId;
 
     /* =========================
-       PERFORMANCE CHART
+       PERFORMANCE CHART (Latest 10)
     ========================= */
 
     const performanceSql = `
-SELECT
-  DATE_FORMAT(created_at, '%d %b %h:%i %p') AS label,
-  t.name AS technology,
-  score
-FROM test_results tr
-JOIN technologies t
-ON tr.technology_id = t.id
-WHERE tr.user_id = ?
-ORDER BY created_at ASC
-LIMIT 10
-`;
+      SELECT * FROM (
+        SELECT
+          DATE_FORMAT(tr.created_at, '%d %b %h:%i %p') AS label,
+          t.name AS technology,
+          tr.score,
+          tr.created_at
+        FROM test_results tr
+        JOIN technologies t ON tr.technology_id = t.id
+        WHERE tr.user_id = ?
+        ORDER BY tr.created_at DESC
+        LIMIT 10
+      ) AS latest_results
+      ORDER BY created_at ASC
+    `;
 
     /* =========================
        PIE CHART

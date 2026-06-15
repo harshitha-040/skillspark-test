@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { X, ShieldCheck, Mail, Lock, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Props = {
   setUser: (user: any) => void;
@@ -6,197 +8,127 @@ type Props = {
 };
 
 function LoginModal({ setUser, onClose }: Props) {
-
-  const [email, setEmail] =
-    useState("");
-
-  const [password, setPassword] =
-    useState("");
-
-  const [error, setError] =
-    useState("");
-
-  const [loading, setLoading] =
-    useState(false);
-
-  /* =========================
-     LOGIN
-  ========================= */
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-
     setError("");
     setLoading(true);
 
     try {
+      const res = await fetch("http://localhost:5000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-      const res = await fetch(
-        "http://localhost:5000/login",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-
-        }
-      );
-
-      const data =
-        await res.json();
+      const data = await res.json();
 
       if (data.success) {
-
-        localStorage.setItem(
-
-          "user",
-
-          JSON.stringify(
-            data.user
-          )
-
-        );
-
+        localStorage.setItem("user", JSON.stringify(data.user));
         setUser(data.user);
-
         onClose();
-
-        window.location.href =
-          "#/dashboard";
-
+        window.location.href = "#/dashboard";
       } else {
-
         setError(data.message);
-
       }
-
     } catch {
-
-      setError("Server error");
-
+      setError("Server error. Please try again.");
     }
-
     setLoading(false);
-
   };
 
   return (
+    <div className="fixed inset-0 flex items-center justify-center z-[100] p-4">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-background/80 backdrop-blur-md" 
+      />
 
-    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/40 backdrop-blur-sm">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        className="relative bg-card border border-border rounded-[2.5rem] p-10 w-full max-w-[440px] shadow-2xl overflow-hidden transition-all duration-300"
+      >
+        {/* CLOSE BUTTON */}
+        <button 
+          onClick={onClose}
+          className="absolute top-6 right-6 p-2 rounded-xl hover:bg-secondary text-muted-foreground transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
 
-      <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 w-[360px] shadow-2xl text-white">
+        <div className="text-center mb-10">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
+            <ShieldCheck className="w-8 h-8 text-primary" />
+          </div>
+          <h2 className="text-3xl font-display font-bold tracking-tight mb-2">Welcome Back</h2>
+          <p className="text-muted-foreground font-medium text-sm">Secure access to your learning portal</p>
+        </div>
 
-        {/* TITLE */}
+        <div className="space-y-4">
+          <div className="relative group">
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <input
+              type="email"
+              placeholder="Email Address"
+              className="w-full pl-12 pr-4 py-4 rounded-2xl bg-secondary/50 border border-border focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all font-medium text-sm"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
 
-        <h2 className="text-xl font-semibold mb-5 text-center">
-
-          Login
-
-        </h2>
-
-        {/* EMAIL */}
-
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full p-3 mb-3 rounded-lg bg-white/10 border border-white/20 placeholder-white/60 text-white focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-          onChange={(e) =>
-            setEmail(
-              e.target.value
-            )
-          }
-        />
-
-        {/* PASSWORD */}
-
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full p-3 mb-2 rounded-lg bg-white/10 border border-white/20 placeholder-white/60 text-white focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-          onChange={(e) =>
-            setPassword(
-              e.target.value
-            )
-          }
-        />
-
-        {/* ERROR */}
+          <div className="relative group">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <input
+              type="password"
+              placeholder="Password"
+              className="w-full pl-12 pr-4 py-4 rounded-2xl bg-secondary/50 border border-border focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all font-medium text-sm"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+        </div>
 
         {error && (
-
-          <p className="text-red-400 text-sm mb-3 text-center">
-
+          <motion.p 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="text-destructive text-xs font-bold mt-4 text-center bg-destructive/10 p-3 rounded-xl border border-destructive/20"
+          >
             {error}
-
-          </p>
-
+          </motion.p>
         )}
-
-        {/* LOGIN BUTTON */}
 
         <button
           onClick={handleLogin}
-          disabled={
-            loading ||
-            !email ||
-            !password
-          }
-          className="w-full bg-blue-500 hover:bg-blue-600 transition-all text-white py-2.5 rounded-lg mb-2 disabled:opacity-50"
+          disabled={loading || !email || !password}
+          className="w-full bg-primary hover:opacity-95 text-white py-4 rounded-2xl mt-8 font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
         >
-
-          {loading
-            ? "Please wait..."
-            : "Login"}
-
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign In to Profile"}
         </button>
 
-        {/* SIGNUP REDIRECT */}
-
-        <p className="text-sm text-center mt-3 text-white/70">
-
-          Don't have an account?{" "}
-
-          <span
-            className="text-blue-400 cursor-pointer hover:underline"
+        <p className="text-sm text-center mt-8 text-muted-foreground font-medium">
+          New to SkillSpark?{" "}
+          <button
+            className="text-primary font-black uppercase tracking-tighter hover:underline"
             onClick={() => {
-
               onClose();
-
-              window.location.href =
-                "#/pricing";
-
+              window.location.hash = "/pricing";
             }}
           >
-
-            Sign up
-
-          </span>
-
+            Create Account
+          </button>
         </p>
-
-        {/* CLOSE */}
-
-        <button
-          onClick={onClose}
-          className="w-full mt-3 text-sm text-white/50 hover:text-white"
-        >
-
-          Close
-
-        </button>
-
-      </div>
-
+      </motion.div>
     </div>
-
   );
-
 }
 
 export default LoginModal;

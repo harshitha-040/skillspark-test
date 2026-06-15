@@ -1,14 +1,20 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
+import { Sun, Moon } from "lucide-react";
 
 import logo from "@/assets/mx-logo.jpg";
+
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useTheme } from "@/components/theme-provider";
 
 const Navbar = ({ user, setUser }: any) => {
 
   const location = useLocation();
-
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
+
+  const isHomePage = location.pathname === "/";
 
   const [showDropdown, setShowDropdown] =
     useState(false);
@@ -100,82 +106,81 @@ const Navbar = ({ user, setUser }: any) => {
         y: 0,
         opacity: 1,
       }}
-      className="fixed top-0 left-0 right-0 z-50 bg-[rgba(11,19,43,0.85)] backdrop-blur-md text-white shadow-md border-b border-cyan-500/10"
+      className="sticky top-0 z-40 w-full bg-background/80 backdrop-blur-xl text-foreground border-b border-border transition-all duration-300"
     >
+      <div className="max-w-[1440px] mx-auto px-6 md:px-12 lg:px-16 h-20 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-6">
+          {/* =========================
+              LOGO
+          ========================= */}
+          <Link
+            to={user ? "/dashboard" : "/"}
+            className="flex items-center gap-4 text-foreground group"
+          >
+            <div className="w-12 h-12 bg-white p-1 rounded-2xl flex items-center justify-center shadow-md border border-border group-hover:scale-105 transition-transform duration-300">
+              <img
+                src={logo}
+                alt="MX Talent-Test Logo"
+                className="w-full h-full object-contain rounded-xl"
+              />
+            </div>
 
-      <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-
-        {/* =========================
-            LOGO
-        ========================= */}
-
-        <Link
-          to={user ? "/dashboard" : "/"}
-          className="flex items-center gap-3 text-white"
-        >
-
-          <div className="w-11 h-11 bg-white p-1 rounded-full flex items-center justify-center shadow-sm">
-
-            <img
-              src={logo}
-              alt="MX Talent-Test Logo"
-              className="w-full h-full object-contain rounded-full"
-            />
-
-          </div>
-
-          <span className="font-display font-semibold text-xl tracking-tight text-white">
-            MX Talent-Test
-          </span>
-
-        </Link>
+            <span className="font-display font-bold text-2xl tracking-tight text-foreground hidden sm:block">
+              MX Talent-Test
+            </span>
+          </Link>
+        </div>
 
         {/* =========================
             RIGHT SIDE
         ========================= */}
-
-        <div className="flex items-center gap-6">
-
-          {/* TAKE TEST */}
-
+        <div className="flex items-center gap-4 md:gap-8">
+          {/* THEME TOGGLE */}
           <button
-            onClick={handleTakeTest}
-            className="text-sm font-medium text-white hover:text-cyan-400 transition-colors"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="p-2.5 rounded-2xl bg-secondary/50 text-foreground hover:bg-muted transition-all duration-300 border border-border/50"
+            aria-label="Toggle theme"
           >
-            Take Test
+            {theme === "dark" ? (
+              <Sun className="h-5 w-5 text-yellow-400" />
+            ) : (
+              <Moon className="h-5 w-5 text-primary" />
+            )}
           </button>
 
-          {/* ADMIN */}
-
-          {(!user ||
-            user.role === "admin") && (
-
-            <Link
-              to="/admin"
-              className="text-sm font-medium text-white hover:text-cyan-400 transition-colors"
+          {/* NAVIGATION LINKS */}
+          <div className="hidden lg:flex items-center gap-8">
+            <button
+              onClick={handleTakeTest}
+              className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest"
             >
-              Admin
-            </Link>
+              Take Test
+            </button>
 
-          )}
+            {(!user || user.role === "admin") && (
+              <Link
+                to="/admin"
+                className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest"
+              >
+                Admin
+              </Link>
+            )}
+          </div>
 
           {/* =========================
-              LOGIN
+              LOGIN / PROFILE
           ========================= */}
-
           {!user ? (
-
             <button
               onClick={() =>
                 window.dispatchEvent(
                   new Event("open-login")
                 )
               }
-              className="bg-cyan-500 hover:bg-cyan-400 transition-all px-5 py-2 rounded-xl text-white font-semibold shadow-[0_0_15px_rgba(34,211,238,0.3)]"
+              className="bg-primary hover:opacity-90 transition-all px-8 py-3 rounded-2xl text-white font-bold shadow-xl shadow-primary/20 text-sm uppercase tracking-widest"
             >
               Login
             </button>
-
           ) : (
 
             <div className="relative">
@@ -197,7 +202,7 @@ const Navbar = ({ user, setUser }: any) => {
 
                 {/* AVATAR */}
 
-                <div className="w-10 h-10 rounded-full bg-cyan-500 flex items-center justify-center text-white font-bold text-lg shadow-[0_0_15px_rgba(34,211,238,0.4)]">
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-primary/20">
 
                   {user.username
                     ?.charAt(0)
@@ -209,7 +214,7 @@ const Navbar = ({ user, setUser }: any) => {
 
                 <div className="hidden md:flex flex-col items-start">
 
-                  <span className="text-sm font-semibold text-white">
+                  <span className="text-sm font-semibold text-foreground">
                     {user.username}
                   </span>
 
@@ -217,7 +222,7 @@ const Navbar = ({ user, setUser }: any) => {
 
                     {/* ROLE */}
 
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-muted-foreground">
 
                       {user.role === "admin"
                         ? "Administrator"
@@ -240,9 +245,9 @@ const Navbar = ({ user, setUser }: any) => {
 
                             : user.plan === "Standard"
 
-                            ? "bg-cyan-500/20 text-cyan-400"
+                            ? "bg-primary/20 text-primary"
 
-                            : "bg-gray-500/20 text-gray-300"
+                            : "bg-muted text-muted-foreground"
 
                         }`}
                       >
@@ -289,22 +294,22 @@ const Navbar = ({ user, setUser }: any) => {
                     onClick={(e) =>
                       e.stopPropagation()
                     }
-                    className="absolute right-0 mt-4 w-64 bg-[#081028] border border-cyan-500/20 rounded-2xl p-5 shadow-2xl z-50 backdrop-blur-xl"
+                    className="absolute right-0 mt-4 w-72 bg-card border border-border rounded-2xl p-2 shadow-2xl z-50 backdrop-blur-2xl overflow-hidden"
                   >
 
                     {/* USER INFO */}
 
-                    <div className="border-b border-white/10 pb-4 mb-4">
+                    <div className="p-4 mb-1 bg-gradient-to-br from-primary/10 to-transparent rounded-xl border border-primary/10">
 
-                      <p className="text-white font-bold text-lg">
+                      <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-[0.2em] mb-2">
                         Welcome back 👋
                       </p>
 
-                      <p className="text-gray-300 mt-1">
+                      <p className="text-foreground font-bold text-xl tracking-tight">
                         {user.username}
                       </p>
 
-                      <p className="text-gray-500 text-sm mt-1">
+                      <p className="text-muted-foreground text-xs mt-1 truncate">
                         {user.email}
                       </p>
 
@@ -312,30 +317,28 @@ const Navbar = ({ user, setUser }: any) => {
 
                     {/* MENU */}
 
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-1">
+
+                      {/* HOME */}
+                      
+                      <button
+                        onClick={() => {
+                          navigate("/");
+                          setShowDropdown(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-secondary text-muted-foreground hover:text-foreground text-sm font-medium"
+                      >
+                        Home
+                      </button>
 
                       {/* DASHBOARD */}
-                      
-                      <div
-  onClick={() => navigate("/")}
-  className="cursor-pointer hover:text-cyan-400 transition-colors"
->
-  Home
-</div>
 
                       <button
                         onClick={() => {
-
-                          navigate(
-                            "/dashboard"
-                          );
-
-                          setShowDropdown(
-                            false
-                          );
-
+                          navigate("/dashboard");
+                          setShowDropdown(false);
                         }}
-                        className="text-left text-white hover:text-cyan-400 transition"
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-secondary text-muted-foreground hover:text-foreground text-sm font-medium"
                       >
                         Dashboard
                       </button>
@@ -344,17 +347,10 @@ const Navbar = ({ user, setUser }: any) => {
 
                       <button
                         onClick={() => {
-
-                          navigate(
-                            "/results"
-                          );
-
-                          setShowDropdown(
-                            false
-                          );
-
+                          navigate("/history");
+                          setShowDropdown(false);
                         }}
-                        className="text-left text-white hover:text-cyan-400 transition"
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-secondary text-muted-foreground hover:text-foreground text-sm font-medium"
                       >
                         My Results
                       </button>
@@ -365,39 +361,24 @@ const Navbar = ({ user, setUser }: any) => {
 
                         <button
                           onClick={() => {
-
-                            navigate(
-                              "/admin"
-                            );
-
-                            setShowDropdown(
-                              false
-                            );
-
+                            navigate("/admin");
+                            setShowDropdown(false);
                           }}
-                          className="text-left text-white hover:text-cyan-400 transition"
+                          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-purple-500/10 text-purple-400 hover:text-purple-300 text-sm font-medium"
                         >
                           Admin Panel
                         </button>
 
                       )}
 
-                      {/* CERTIFICATES */}
-
-                      <button
-                        className="text-left text-gray-500 cursor-not-allowed"
-                      >
-                        Certificates
-                        (Coming Soon)
-                      </button>
+                      {/* SEPARATOR */}
+                      <div className="h-px bg-border my-2" />
 
                       {/* LOGOUT */}
 
                       <button
-                        onClick={
-                          handleLogout
-                        }
-                        className="text-left text-red-400 hover:text-red-300 transition"
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-destructive/10 text-destructive hover:text-destructive text-sm font-medium"
                       >
                         Logout
                       </button>

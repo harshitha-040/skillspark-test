@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 import {
   ResponsiveContainer,
   XAxis,
@@ -15,415 +14,284 @@ import {
   Area,
   AreaChart,
 } from "recharts";
+import { useTheme } from "@/components/theme-provider";
 
-const COLORS = [
-  "#22d3ee",
-  "#3b82f6",
-  "#06b6d4",
-  "#8b5cf6",
-  "#14b8a6",
-  "#facc15",
-  "#22c55e",
-  "#f97316",
+const COLORS_DARK = [
+  "#60A5FA", // Blue 400
+  "#A78BFA", // Violet 400
+  "#2DD4BF", // Teal 400
+  "#FBBF24", // Amber 400
+  "#34D399", // Emerald 400
+  "#FB923C", // Orange 400
+  "#F87171", // Red 400
+  "#F472B6", // Pink 400
+];
+
+const COLORS_LIGHT = [
+  "#2563EB", // Blue 600
+  "#7C3AED", // Violet 600
+  "#0D9488", // Teal 600
+  "#CA8A04", // Amber 600
+  "#059669", // Emerald 600
+  "#EA580C", // Orange 600
+  "#DC2626", // Red 600
+  "#DB2777", // Pink 600
 ];
 
 function PerformanceChart() {
+  const { theme } = useTheme();
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [performanceData, setPerformanceData] = useState<any[]>([]);
+  const [techData, setTechData] = useState<any[]>([]);
+  const [scoreData, setScoreData] = useState<any[]>([]);
 
-  const [dashboardData, setDashboardData] =
-    useState<any>(null);
-
-  const [performanceData, setPerformanceData] =
-    useState<any[]>([]);
-
-  const [techData, setTechData] =
-    useState<any[]>([]);
-
-  const [scoreData, setScoreData] =
-    useState<any[]>([]);
+  // Correctly resolve "system" theme
+  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("dark");
 
   useEffect(() => {
+    const root = window.document.documentElement;
+    const isDark = root.classList.contains("dark");
+    setResolvedTheme(isDark ? "dark" : "light");
 
-    const user = JSON.parse(
-      localStorage.getItem("user") || "null"
-    );
+    if (theme === "system") {
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      const handleChange = (e: MediaQueryListEvent) => {
+        setResolvedTheme(e.matches ? "dark" : "light");
+      };
+      mediaQuery.addEventListener("change", handleChange);
+      return () => mediaQuery.removeEventListener("change", handleChange);
+    }
+  }, [theme]);
 
+  const isDark = resolvedTheme === "dark";
+  const colors = isDark ? COLORS_DARK : COLORS_LIGHT;
+  
+  // High contrast colors
+  const textColor = isDark ? "#F8FAFC" : "#0F172A"; 
+  const gridColor = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)";
+  const tooltipBg = isDark ? "#1E293B" : "#FFFFFF";
+  const tooltipBorder = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)";
+  const chartPrimary = isDark ? "#3B82F6" : "#2563EB";
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "null");
     if (!user) return;
 
-    fetch(
-      `http://localhost:5000/api/dashboard/${user.id}`
-    )
+    fetch(`http://localhost:5000/api/dashboard/${user.id}`)
+      .then((res) => res.json())
+      .then((data) => setDashboardData(data));
+
+    fetch(`http://localhost:5000/api/chart-data/${user.id}`)
       .then((res) => res.json())
       .then((data) => {
-
-        setDashboardData(data);
-
-      });
-
-    fetch(
-      `http://localhost:5000/api/chart-data/${user.id}`
-    )
-      .then((res) => res.json())
-
-      .then((data) => {
-
-        console.log(
-          "TECH DATA:",
-          data.techData
-        );
-
-        setPerformanceData(
-          data.performanceData || []
-        );
-
-        setTechData(
-          data.techData || []
-        );
-
-        setScoreData(
-          data.scoreData || []
-        );
-
+        setPerformanceData(data.performanceData || []);
+        setTechData(data.techData || []);
+        setScoreData(data.scoreData || []);
       })
-
-      .catch((err) => {
-
-        console.log(
-          "Chart Error:",
-          err
-        );
-
-      });
-
+      .catch((err) => console.error("Chart Error:", err));
   }, []);
 
   return (
-
     <div className="space-y-8">
-
       {/* =========================
           TOP PERFORMANCE CHART
       ========================= */}
-
-      <div className="bg-[#111c44]/80 border border-cyan-500/10 rounded-3xl p-8 backdrop-blur-xl shadow-[0_0_40px_rgba(0,255,255,0.08)]">
-
-        <div className="flex items-center justify-between mb-8">
-
+      <div className="bg-card border border-border rounded-[2rem] p-8 shadow-sm transition-all duration-300">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
           <div>
-
-            <p className="text-cyan-400 uppercase tracking-[5px] text-sm font-semibold">
-              Analytics
+            <p className="text-primary text-xs font-black uppercase tracking-[0.2em] mb-2">
+              Performance Analytics
             </p>
+            <h2 className="text-3xl font-display font-bold tracking-tight">
+              Skill Progression
+            </h2>
+            <p className="text-muted-foreground mt-1">
+              Visualize your growth across various technology domains.
+            </p>
+          </div>
 
-            <h2 className="text-4xl font-bold mt-2 text-white">
-              Weekly Performance
+          <div className="bg-primary/10 border border-primary/20 px-6 py-3 rounded-2xl text-primary font-black shadow-sm text-center">
+            AVG {dashboardData?.averageScore || 0}%
+          </div>
+        </div>
+
+        <div className="h-[400px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={performanceData}>
+            <defs>
+              <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={chartPrimary} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={chartPrimary} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+            <XAxis 
+              dataKey="label" 
+              stroke={textColor} 
+              fontSize={11} 
+              fontWeight={600}
+              tickLine={false} 
+              axisLine={false} 
+              dy={10}
+            />
+            <YAxis 
+              stroke={textColor} 
+              fontSize={11} 
+              fontWeight={600}
+              tickLine={false} 
+              axisLine={false} 
+              domain={[0, 100]} 
+              dx={-10}
+            />
+            <Tooltip
+              content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  const data = payload[0].payload;
+                  return (
+                    <div 
+                      className="rounded-2xl p-4 shadow-2xl backdrop-blur-md border"
+                      style={{ backgroundColor: tooltipBg, borderColor: tooltipBorder }}
+                    >
+                      <p className="text-muted-foreground text-[10px] font-bold uppercase mb-2">
+                        {data.label}
+                      </p>
+                      <div className="space-y-1">
+                        <p className="text-primary font-bold text-sm flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: chartPrimary }} />
+                          {data.technology}
+                        </p>
+                        <p className="text-foreground font-black text-2xl">
+                          {data.score}%
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
+            <Area
+              type="monotone"
+              dataKey="score"
+              stroke={chartPrimary}
+              fill="url(#colorScore)"
+              strokeWidth={5}
+              dot={{ r: 6, fill: isDark ? "#071028" : "#FFFFFF", stroke: chartPrimary, strokeWidth: 3 }}
+              activeDot={{ r: 8, strokeWidth: 0, fill: chartPrimary }}
+            />
+            </AreaChart>
+            </ResponsiveContainer>
+            </div>
+            </div>
+
+            {/* =========================
+            PIE + BAR SECTION
+            ========================= */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* PIE CHART */}
+            <div className="bg-card border border-border rounded-[2rem] p-8 shadow-sm transition-all duration-300">
+            <p className="text-primary text-xs font-black uppercase tracking-[0.2em] mb-2">
+            Distribution
+            </p>
+            <h2 className="text-2xl font-display font-bold mb-8 tracking-tight">
+            Skill Breakdown
             </h2>
 
-            <p className="text-gray-400 mt-2">
-              Track your coding progress and assessment growth.
-            </p>
-
-          </div>
-
-          <div className="bg-cyan-500/10 border border-cyan-400/20 px-5 py-3 rounded-2xl text-cyan-400 font-bold shadow-[0_0_15px_rgba(34,211,238,0.25)]">
-
-            Avg {dashboardData?.averageScore || 0}%
-
-          </div>
-
-        </div>
-
-        <div className="h-[420px]">
-
-          <ResponsiveContainer width="100%" height="100%">
-
-            <AreaChart data={performanceData}>
-
-              <defs>
-
-                <linearGradient
-                  id="colorScore"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-
-                  <stop
-                    offset="5%"
-                    stopColor="#22d3ee"
-                    stopOpacity={0.4}
-                  />
-
-                  <stop
-                    offset="95%"
-                    stopColor="#22d3ee"
-                    stopOpacity={0}
-                  />
-
-                </linearGradient>
-
-              </defs>
-
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="#1e293b"
-              />
-
-              <XAxis
-                dataKey="label"
-                stroke="#94a3b8"
-              />
-
-              <YAxis
-                stroke="#94a3b8"
-                domain={[0, 100]}
-              />
-
-              <Tooltip
-                content={({ active, payload }) => {
-
-                  if (
-                    active &&
-                    payload &&
-                    payload.length
-                  ) {
-
-                    const data =
-                      payload[0].payload;
-
-                    return (
-
-                      <div className="bg-[#0f172a] border border-cyan-400 rounded-2xl p-4 shadow-[0_0_20px_rgba(34,211,238,0.2)]">
-
-                        <p className="text-white font-semibold mb-2">
-
-                          {data.label}
-
-                        </p>
-
-                        <p className="text-cyan-400 text-sm">
-
-                          Technology:
-                          {" "}
-                          {data.technology}
-
-                        </p>
-
-                        <p className="text-white text-sm mt-1">
-
-                          Score:
-                          {" "}
-                          {data.score}%
-
-                        </p>
-
-                      </div>
-
-                    );
-
-                  }
-
-                  return null;
-
-                }}
-              />
-
-              <Area
-                type="monotone"
-                dataKey="score"
-                stroke="#22d3ee"
-                fill="url(#colorScore)"
-                strokeWidth={4}
-
-                dot={(props: any) => {
-
-                  const {
-                    cx,
-                    cy,
-                    payload,
-                  } = props;
-
-                  let color =
-                    "#8b5cf6";
-
-                  const tech =
-                    payload?.technology
-                      ?.toLowerCase()
-                      ?.trim();
-
-                  if (tech === "core java") {
-
-                    color = "#22d3ee";
-
-                  }
-
-                  else if (tech === "python") {
-
-                    color = "#facc15";
-
-                  }
-
-                  else if (tech === "react") {
-
-                    color = "#3b82f6";
-
-                  }
-
-                  else if (tech === "javascript") {
-
-                    color = "#22c55e";
-
-                  }
-
-                  return (
-
-                    <circle
-                      cx={cx}
-                      cy={cy}
-                      r={8}
-                      fill={color}
-                      stroke="#0f172a"
-                      strokeWidth={3}
-                    />
-
-                  );
-
-                }}
-              />
-
-            </AreaChart>
-
-          </ResponsiveContainer>
-
-        </div>
-
-      </div>
-
-      {/* =========================
-          PIE + BAR SECTION
-      ========================= */}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-        {/* PIE CHART */}
-
-        <div className="bg-[#111c44]/80 border border-cyan-500/10 rounded-3xl p-8 backdrop-blur-xl shadow-[0_0_30px_rgba(0,255,255,0.08)]">
-
-          <p className="text-cyan-400 uppercase tracking-[5px] text-sm mb-3 font-semibold">
-            Skills
-          </p>
-
-          <h2 className="text-3xl font-bold mb-8 text-white">
-            Average Scores by Technology
-          </h2>
-
-          <div className="h-[350px]">
-
+            <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-
-              <PieChart>
-
-                <Pie
-                  data={techData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={120}
-                  innerRadius={70}
-                  paddingAngle={4}
-                  label={({ name, value }: any) =>
-  `${name} ${value}%`
-}
-                >
-
-                  {techData.map(
-                    (_: any, index) => (
-
-                      <Cell
-                        key={index}
-                        fill={
-                          COLORS[
-                            index % COLORS.length
-                          ]
-                        }
-                      />
-
-                    )
-                  )}
-
-                </Pie>
-
-                <Tooltip />
-
-                <Legend />
-
-              </PieChart>
-
-            </ResponsiveContainer>
-
-          </div>
-
-        </div>
-
-        {/* BAR CHART */}
-
-        <div className="bg-[#111c44]/80 border border-cyan-500/10 rounded-3xl p-8 backdrop-blur-xl shadow-[0_0_30px_rgba(0,255,255,0.08)]">
-
-          <p className="text-cyan-400 uppercase tracking-[5px] text-sm mb-3 font-semibold">
-            Reports
-          </p>
-
-          <h2 className="text-3xl font-bold mb-8 text-white">
-            Technology-wise Scores
-          </h2>
-
-          <div className="h-[350px]">
-
-            <ResponsiveContainer width="100%" height="100%">
-
-              <BarChart
-                data={scoreData}
-                barCategoryGap={40}
+            <PieChart>
+              <Pie
+                data={techData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                innerRadius={75}
+                paddingAngle={8}
               >
+                {techData.map((_: any, index) => (
+                  <Cell 
+                    key={index} 
+                    fill={colors[index % colors.length]} 
+                    stroke={isDark ? "#0F172A" : "#FFFFFF"} 
+                    strokeWidth={4}
+                  />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{ 
+                  backgroundColor: tooltipBg, 
+                  borderRadius: "16px", 
+                  border: `1px solid ${tooltipBorder}`,
+                  boxShadow: "0 20px 50px rgba(0,0,0,0.2)"
+                }}
+                itemStyle={{ color: isDark ? "#F8FAFC" : "#0F172A", fontWeight: 'bold' }}
+              />
+              <Legend 
+                verticalAlign="bottom" 
+                iconType="circle" 
+                wrapperStyle={{ paddingTop: "20px", fontSize: "12px", fontWeight: 'bold' }}
+              />
+            </PieChart>
+            </ResponsiveContainer>
+            </div>
+            </div>
 
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="#1e293b"
-                />
+            {/* BAR CHART */}
+            <div className="bg-card border border-border rounded-[2rem] p-8 shadow-sm transition-all duration-300">
+            <p className="text-primary text-xs font-black uppercase tracking-[0.2em] mb-2">
+            Benchmarking
+            </p>
+            <h2 className="text-2xl font-display font-bold mb-8 tracking-tight">
+            Technology Scores
+            </h2>
 
-                <XAxis
-                  dataKey="tech"
-                  stroke="#94a3b8"
-                />
-
-                <YAxis
-                  stroke="#94a3b8"
-                  domain={[0, 100]}
-                />
-
-                <Tooltip />
-
-                <Bar
-                  dataKey="score"
-                  fill="#22d3ee"
-                  radius={[12, 12, 0, 0]}
-                />
-
-              </BarChart>
+            <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={scoreData} barCategoryGap={35}>
+              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+              <XAxis 
+                dataKey="tech" 
+                stroke={textColor} 
+                fontSize={11} 
+                fontWeight={600}
+                tickLine={false} 
+                axisLine={false} 
+                dy={10}
+              />
+              <YAxis 
+                stroke={textColor} 
+                fontSize={11} 
+                fontWeight={600}
+                tickLine={false} 
+                axisLine={false} 
+                domain={[0, 100]} 
+                dx={-10}
+              />
+              <Tooltip
+                cursor={{ fill: chartPrimary, opacity: 0.1 }}
+                contentStyle={{ 
+                  backgroundColor: tooltipBg, 
+                  borderRadius: "16px", 
+                  border: `1px solid ${tooltipBorder}`,
+                  boxShadow: "0 20px 50px rgba(0,0,0,0.2)"
+                }}
+              />
+              <Bar 
+                dataKey="score" 
+                fill={chartPrimary} 
+                radius={[10, 10, 0, 0]} 
+                animationDuration={1500}
+              />
+            </BarChart>
 
             </ResponsiveContainer>
-
           </div>
-
         </div>
-
       </div>
-
     </div>
-
   );
-
 }
 
 export default PerformanceChart;

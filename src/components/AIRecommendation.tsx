@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Sparkles, ArrowRight, Zap } from "lucide-react";
 
 interface AIData {
   weakestSkill: string;
@@ -8,271 +9,71 @@ interface AIData {
 }
 
 function AIRecommendation() {
-
   const navigate = useNavigate();
-
-  const [aiData, setAiData] =
-    useState<AIData | null>(null);
+  const [aiData, setAIData] = useState<AIData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-
-    const user = JSON.parse(
-      localStorage.getItem("user") || "null"
-    );
-
+    const user = JSON.parse(localStorage.getItem("user") || "null");
     if (!user) return;
 
-    fetch(
-      `http://localhost:5000/api/ai-insights/${user.id}`
-    )
-
+    fetch(`http://localhost:5000/api/ai-recommendation/${user.id}`)
       .then((res) => res.json())
-
       .then((data) => {
-
-        console.log(
-          "AI Recommendation:",
-          data
-        );
-
-        setAiData(data);
-
+        setAIData(data);
+        setLoading(false);
       })
-
       .catch((err) => {
-
-        console.log(
-          "AI Recommendation Error:",
-          err
-        );
-
+        console.error("AI Error:", err);
+        setLoading(false);
       });
-
   }, []);
 
-  /* =========================
-     LOADING
-  ========================= */
-
-  if (!aiData) {
-
+  if (loading) {
     return (
-
-      <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-3xl p-6">
-
-        <h2 className="text-2xl font-bold text-cyan-400">
-
-          Loading AI Recommendation...
-
-        </h2>
-
+      <div className="bg-card border border-border rounded-[2rem] p-8 h-full animate-pulse">
+        <div className="h-6 w-1/3 bg-muted rounded-full mb-4" />
+        <div className="h-24 w-full bg-muted rounded-2xl mb-4" />
       </div>
-
     );
-
   }
-
-  /* =========================
-     GET USER PLAN
-  ========================= */
-
-  const user = JSON.parse(
-    localStorage.getItem("user") || "null"
-  );
-
-  const userPlan =
-    user?.plan?.toLowerCase() || "free";
-
-  /* =========================
-     DETERMINE DIFFICULTY
-  ========================= */
-
-  let difficulty = "Beginner";
-
-  /* FREE */
-
-  if (userPlan === "free") {
-
-    difficulty = "Beginner";
-
-  }
-
-  /* STANDARD */
-
-  else if (
-    userPlan === "standard"
-  ) {
-
-    if (
-      aiData.weakestScore >= 40
-    ) {
-
-      difficulty = "Intermediate";
-
-    } else {
-
-      difficulty = "Beginner";
-
-    }
-
-  }
-
-  /* PRO */
-
-  else if (
-    userPlan === "pro"
-  ) {
-
-    if (
-      aiData.weakestScore >= 70
-    ) {
-
-      difficulty = "Advanced";
-
-    }
-
-    else if (
-      aiData.weakestScore >= 40
-    ) {
-
-      difficulty = "Intermediate";
-
-    }
-
-    else {
-
-      difficulty = "Beginner";
-
-    }
-
-  }
-
-  console.log(
-    "Recommended Difficulty:",
-    difficulty
-  );
-
-  /* =========================
-     PRACTICE TITLE
-  ========================= */
-
-  const practiceTitle =
-    `${difficulty} Assessment`;
-
-  /* =========================
-     START PRACTICE
-  ========================= */
-
-  const handleStartPractice = () => {
-
-    console.log(
-      "AI DATA:",
-      aiData
-    );
-
-    const technology =
-      aiData?.weakestSkill;
-
-    if (
-      !technology ||
-      technology === "No Data"
-    ) {
-
-      alert(
-        "No weak skill found"
-      );
-
-      return;
-
-    }
-
-    /* =========================
-       SAVE AI SESSION
-    ========================= */
-
-    localStorage.setItem(
-      "aiTechnology",
-      technology
-    );
-
-    localStorage.setItem(
-      "aiDifficulty",
-      difficulty
-    );
-
-    localStorage.setItem(
-      "aiAutoStart",
-      "true"
-    );
-
-    console.log(
-      "Saved AI Session:",
-      technology,
-      difficulty
-    );
-
-    navigate("/select");
-
-  };
 
   return (
+    <div className="bg-card border border-border rounded-[2rem] p-8 h-full shadow-sm relative overflow-hidden group">
+      {/* GLOW EFFECT */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-primary/10 transition-all duration-500" />
 
-    <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-3xl p-6">
+      <div className="relative z-10 flex flex-col h-full">
+        <div className="flex items-center gap-2 mb-6">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Sparkles className="w-5 h-5 text-primary" />
+          </div>
+          <span className="text-xs font-black uppercase tracking-[0.2em] text-primary">
+            AI Personalized Coaching
+          </span>
+        </div>
 
-      <p className="text-cyan-400 uppercase tracking-[4px] text-sm">
-
-        AI Recommendation
-
-      </p>
-
-      <h2 className="text-3xl font-bold mt-3">
-
-        Improve Your{" "}
-
-        {aiData.weakestSkill}
-
-        {" "}Skills
-
-      </h2>
-
-      <p className="text-gray-300 mt-4 leading-7">
-
-        {aiData.recommendation}
-
-      </p>
-
-      <div className="mt-6 bg-black/20 rounded-2xl p-4 border border-cyan-500/10">
-
-        <p className="text-gray-400 text-sm">
-
-          Recommended Practice
-
-        </p>
-
-        <h3 className="text-cyan-400 text-xl font-bold mt-2">
-
-          {practiceTitle}
-
+        <h3 className="text-2xl font-display font-bold mb-4">
+          Ready to master <span className="text-primary">{aiData?.weakestSkill || "New Skills"}</span>?
         </h3>
 
+        <div className="bg-secondary/50 border border-border/50 rounded-2xl p-6 mb-8 flex-1">
+          <p className="text-muted-foreground leading-relaxed italic">
+            "{aiData?.recommendation || "Take more tests to get personalized AI recommendations and career path guidance."}"
+          </p>
+        </div>
+
+        <button
+          onClick={() => navigate("/select")}
+          className="w-full bg-primary hover:opacity-90 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 transition-all active:scale-95"
+        >
+          <Zap className="w-4 h-4" />
+          <span>Start Practice Session</span>
+          <ArrowRight className="w-4 h-4 ml-1" />
+        </button>
       </div>
-
-      <button
-
-        onClick={handleStartPractice}
-
-        className="mt-6 bg-cyan-500 hover:bg-cyan-400 transition-all text-black px-6 py-3 rounded-2xl font-bold"
-
-      >
-
-        Start Practice
-
-      </button>
-
     </div>
-
   );
-
 }
 
 export default AIRecommendation;
